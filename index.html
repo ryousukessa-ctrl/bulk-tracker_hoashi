@@ -1,0 +1,357 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#10251e">
+<title>Bulk Up - 増量管理</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#17241e;background:#f3f6f3}
+*{box-sizing:border-box}
+body{margin:0 auto;max-width:700px;padding:0 14px calc(35px + env(safe-area-inset-bottom))}
+header{background:#10251e;color:white;padding:24px 18px;margin:0 -14px 14px;border-radius:0 0 22px 22px}
+header h1{font-size:25px;margin:0}header p{color:#c6d8cd;font-size:13px;margin:6px 0 0}
+nav{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;position:sticky;top:0;background:#f3f6f3;padding:7px 0;z-index:5}
+nav button{padding:10px 2px;background:white;color:#456154;border:1px solid #e1e8e2;border-radius:11px;font-size:12px}
+nav button.active{background:#176b46;color:white}
+.page{display:none}.page.active{display:block}
+.card{background:white;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 2px 12px #173e2510}
+h2{font-size:18px;margin:0 0 13px}h3{font-size:15px;margin:14px 0 8px}
+p,.muted{font-size:13px;color:#718078;line-height:1.6}
+label{display:block;font-size:13px;font-weight:650;margin:12px 0 6px}
+input,select,textarea{width:100%;font-size:16px;padding:12px;border:1px solid #d8e0da;border-radius:10px;background:white;color:#17241e}
+textarea{min-height:75px}
+button{border:0;border-radius:10px;padding:12px;font-size:14px;font-weight:650;cursor:pointer}
+.primary{background:#176b46;color:white;width:100%;margin-top:12px}
+.secondary{background:#eaf2ec;color:#205e3d}
+.danger{background:#fff0ef;color:#b3261e}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.metric{padding:12px 6px;background:#f0f5f1;border-radius:12px;text-align:center;min-width:0}
+.metric span{font-size:11px;color:#68786e}.metric strong{display:block;font-size:20px;margin:4px 0;overflow-wrap:anywhere}
+.bar{height:6px;background:#e5ece6;border-radius:8px;overflow:hidden;margin-top:6px}
+.bar div{height:100%;background:#25865a;width:0}
+.entry{padding:12px 0;border-top:1px solid #edf0ed}.entry:first-child{border-top:0}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1;min-width:0}
+.entry strong{font-size:14px}.entry p{margin:4px 0}
+.small{font-size:11px;color:#77857b}
+.preview{width:100%;max-height:210px;object-fit:contain;border-radius:10px;margin-top:8px;background:#eee}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+<h1>💪 BULK UP</h1>
+<p>筋トレ・食事・体重・身体をまとめて管理</p>
+</header>
+
+<nav>
+<button class="active" data-tab="home">ホーム</button>
+<button data-tab="workout">筋トレ</button>
+<button data-tab="food">食事</button>
+<button data-tab="body">体の管理</button>
+<button data-tab="backup">保存</button>
+</nav>
+
+<section class="page active" id="home">
+  <div class="card">
+    <h2>今日の進捗</h2>
+    <div class="grid3">
+      <div class="metric"><span>カロリー</span><strong id="homeCal">0</strong><span>/ 2850 kcal</span><div class="bar"><div id="calBar"></div></div></div>
+      <div class="metric"><span>タンパク質</span><strong id="homeP">0</strong><span>/ 130 g</span><div class="bar"><div id="pBar"></div></div></div>
+      <div class="metric"><span>体重</span><strong id="homeWeight">--</strong><span>kg</span></div>
+    </div>
+    <p id="homeSummary">食事・筋トレ・体重を記録しましょう。</p>
+  </div>
+  <div class="card"><h2>今日の食事</h2><div id="homeFood"></div></div>
+  <div class="card"><h2>今日の筋トレ</h2><div id="homeWorkout"></div></div>
+  <div class="card"><h2>体重の変化</h2><div id="weightSummary"></div></div>
+</section>
+
+<section class="page" id="workout">
+  <div class="card">
+    <h2>筋トレを記録</h2>
+    <label>種目</label>
+    <select id="exercise">
+      <option>ベンチプレス</option><option>インクラインベンチプレス</option>
+      <option>ダンベルプレス</option><option>ペックフライ</option>
+      <option>スクワット</option><option>デッドリフト</option>
+      <option>ラットプルダウン</option><option>懸垂</option>
+      <option>バーベルロー</option><option>ショルダープレス</option>
+      <option>サイドレイズ</option><option>アームカール</option>
+      <option>トライセプスプレスダウン</option><option>レッグプレス</option>
+      <option>レッグカール</option><option>その他</option>
+    </select>
+    <label>種目名（その他の場合）</label><input id="exerciseOther" placeholder="任意">
+    <div class="grid2">
+      <div><label>重量（kg）</label><input id="weightLift" type="number" min="0" step="0.5" placeholder="例：60" inputmode="decimal"></div>
+      <div><label>回数</label><input id="reps" type="number" min="1" placeholder="例：10" inputmode="numeric"></div>
+    </div>
+    <label>セット数</label><input id="sets" type="number" min="1" value="3" inputmode="numeric">
+    <label>日付</label><input id="workDate" type="date">
+    <label>メモ（任意）</label><textarea id="workNote" placeholder="調子、フォーム、体感など"></textarea>
+    <button class="primary" onclick="addWorkout()">筋トレを保存</button>
+  </div>
+  <div class="card"><h2>筋トレ履歴</h2><div id="workHistory"></div></div>
+</section>
+
+<section class="page" id="food">
+  <div class="card">
+    <h2>食事を記録</h2>
+    <label>食事の種類</label>
+    <select id="mealType"><option>朝食</option><option>昼食</option><option>夕食</option><option>間食</option></select>
+    <label>食事名</label><input id="mealName" placeholder="例：鶏肉とご飯">
+    <label>写真（任意）</label><input id="mealPhoto" type="file" accept="image/*" capture="environment">
+    <img id="photoPreview" class="preview hidden" alt="食事写真">
+    <p>写真は端末内で縮小して保存します。写真だけからAIが栄養値を自動判定する機能はありません。</p>
+    <label>材料・分量</label>
+    <textarea id="ingredients" placeholder="例：ご飯 250g、鶏むね肉 150g、卵 1個"></textarea>
+    <button class="secondary" style="width:100%;margin-top:10px" onclick="estimateFood()">材料から栄養を計算</button>
+    <p class="small">食品名と分量は登録済みの食品データに合う形で入力してください。計算は目安値です。</p>
+    <h3>栄養値（必要なら修正）</h3>
+    <div class="grid2">
+      <div><label>カロリー（kcal）</label><input id="foodCal" type="number" min="0" inputmode="decimal"></div>
+      <div><label>タンパク質（g）</label><input id="foodP" type="number" min="0" inputmode="decimal"></div>
+      <div><label>脂質（g）</label><input id="foodF" type="number" min="0" inputmode="decimal"></div>
+      <div><label>炭水化物（g）</label><input id="foodC" type="number" min="0" inputmode="decimal"></div>
+    </div>
+    <button class="primary" onclick="addFood()">食事を保存</button>
+  </div>
+  <div class="card"><h2>今日の栄養合計</h2><div class="grid3">
+    <div class="metric"><span>カロリー</span><strong id="foodSumCal">0</strong></div>
+    <div class="metric"><span>タンパク質</span><strong id="foodSumP">0</strong></div>
+    <div class="metric"><span>脂質</span><strong id="foodSumF">0</strong></div>
+  </div><p id="foodSumC"></p></div>
+  <div class="card"><h2>食事履歴</h2><div id="foodHistory"></div></div>
+</section>
+
+<section class="page" id="body">
+  <div class="card">
+    <h2>体重・身体サイズ</h2>
+    <label>測定日</label><input id="bodyDate" type="date">
+    <div class="grid2">
+      <div><label>体重（kg）</label><input id="bodyWeight" type="number" step="0.1" min="0" placeholder="例：63.0" inputmode="decimal"></div>
+      <div><label>体脂肪率（%）</label><input id="bodyFat" type="number" step="0.1" min="0" max="100" placeholder="任意" inputmode="decimal"></div>
+      <div><label>ウエスト（cm）</label><input id="waist" type="number" step="0.1" min="0" placeholder="任意" inputmode="decimal"></div>
+      <div><label>胸囲（cm）</label><input id="chest" type="number" step="0.1" min="0" placeholder="任意" inputmode="decimal"></div>
+      <div><label>腕周り（cm）</label><input id="arm" type="number" step="0.1" min="0" placeholder="任意" inputmode="decimal"></div>
+      <div><label>太もも（cm）</label><input id="thigh" type="number" step="0.1" min="0" placeholder="任意" inputmode="decimal"></div>
+    </div>
+    <label>メモ（任意）</label><textarea id="bodyNote" placeholder="睡眠、食欲、体調など"></textarea>
+    <button class="primary" onclick="addBody()">身体データを保存</button>
+  </div>
+  <div class="card"><h2>目標設定</h2>
+    <div class="grid2">
+      <div><label>目標体重（kg）</label><input id="goalWeight" type="number" step="0.1" value="70"></div>
+      <div><label>1日のカロリー目標</label><input id="goalCal" type="number" value="2850"></div>
+      <div><label>タンパク質目標（g）</label><input id="goalProtein" type="number" value="130"></div>
+      <div><label>脂質目標（g）</label><input id="goalFat" type="number" value="70"></div>
+      <div><label>炭水化物目標（g）</label><input id="goalCarbs" type="number" value="420"></div>
+    </div>
+    <button class="primary" onclick="saveGoals()">目標を保存</button>
+  </div>
+  <div class="card"><h2>身体の記録履歴</h2><div id="bodyHistory"></div></div>
+</section>
+
+<section class="page" id="backup">
+  <div class="card">
+    <h2>データのバックアップ</h2>
+    <p>記録はこのiPhoneのブラウザ内に保存されます。ブラウザのデータ削除や端末変更で消えることがあるため、定期的にバックアップしてください。</p>
+    <button class="primary" onclick="exportData()">全記録をバックアップ</button>
+    <label>バックアップファイルから復元</label>
+    <input type="file" id="restoreFile" accept="application/json">
+    <button class="secondary" style="width:100%;margin-top:10px" onclick="restoreData()">バックアップを復元</button>
+    <p class="small">復元すると現在の記録がバックアップ内容に置き換わります。</p>
+  </div>
+  <div class="card">
+    <h2>データについて</h2>
+    <p>このアプリは外部サーバーへの同期を行いません。記録を同じブラウザで使う設計です。公開リポジトリに個人の身体データや写真を直接保存しないでください。</p>
+    <button class="danger" style="width:100%" onclick="clearAll()">全記録を削除</button>
+  </div>
+</section>
+
+<script>
+const KEY="bulkUpAppDataV1";
+const DEFAULT={
+  foods:[],workouts:[],bodies:[],
+  goals:{weight:70,cal:2850,protein:130,fat:70,carbs:420}
+};
+function loadData(){
+  try{
+    const d=JSON.parse(localStorage.getItem(KEY)||"null");
+    if(!d)return structuredClone(DEFAULT);
+    return {...DEFAULT,...d,goals:{...DEFAULT.goals,...(d.goals||{})}};
+  }catch(e){return structuredClone(DEFAULT)}
+}
+let data=loadData();
+let photoData="";
+const $=id=>document.getElementById(id);
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const n=id=>Math.max(0,Number($(id).value)||0);
+const r=x=>Math.round((x||0)*10)/10;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function persist(){
+  try{localStorage.setItem(KEY,JSON.stringify(data));render()}
+  catch(e){alert("保存容量が不足しています。写真を減らし、バックアップを取ってください。")}
+}
+function dayFoods(day=today()){return data.foods.filter(x=>x.date===day)}
+function dayWorkouts(day=today()){return data.workouts.filter(x=>x.date===day)}
+function sumFoods(items){
+  return items.reduce((s,x)=>{s.cal+=x.cal||0;s.p+=x.p||0;s.f+=x.f||0;s.c+=x.c||0;return s},{cal:0,p:0,f:0,c:0});
+}
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x===b));
+  document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id===b.dataset.tab));
+  window.scrollTo({top:0,behavior:"smooth"});
+}));
+$("workDate").value=today();$("bodyDate").value=today();
+$("mealPhoto").addEventListener("change",async e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  try{
+    photoData=await compressPhoto(f);
+    $("photoPreview").src=photoData;$("photoPreview").classList.remove("hidden");
+  }catch(err){alert("写真を読み込めませんでした")}
+});
+function compressPhoto(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();reader.onerror=reject;
+    reader.onload=()=>{
+      const img=new Image();img.onerror=reject;
+      img.onload=()=>{
+        const scale=Math.min(1,700/Math.max(img.width,img.height));
+        const c=document.createElement("canvas");
+        c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);
+        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+        resolve(c.toDataURL("image/jpeg",0.58));
+      };img.src=reader.result;
+    };reader.readAsDataURL(file);
+  });
+}
+const FOODDB={
+  "ご飯":{u:"g",cal:156,p:2.5,f:.3,c:37.1},
+  "白米":{u:"g",cal:156,p:2.5,f:.3,c:37.1},
+  "玄米":{u:"g",cal:152,p:2.8,f:1,c:35.6},
+  "鶏むね肉":{u:"g",cal:105,p:23,f:1.9,c:0},
+  "鶏胸肉":{u:"g",cal:105,p:23,f:1.9,c:0},
+  "鶏もも肉":{u:"g",cal:190,p:16.6,f:14.2,c:0},
+  "牛肉":{u:"g",cal:250,p:17,f:19,c:0},
+  "豚肉":{u:"g",cal:220,p:18,f:15,c:0},
+  "鮭":{u:"g",cal:124,p:22,f:4.5,c:0},
+  "卵":{u:"個",cal:76,p:6.2,f:5.2,c:.2},
+  "納豆":{u:"個",cal:90,p:7.4,f:4.5,c:5.4},
+  "豆腐":{u:"g",cal:56,p:5.3,f:3.5,c:2},
+  "牛乳":{u:"ml",cal:61,p:3.3,f:3.8,c:4.8},
+  "豆乳":{u:"ml",cal:46,p:3.6,f:2,c:3.1},
+  "バナナ":{u:"本",cal:93,p:1.1,f:.2,c:22.5},
+  "食パン":{u:"枚",cal:158,p:5.6,f:2.6,c:28},
+  "オートミール":{u:"g",cal:350,p:13.7,f:5.7,c:69.1},
+  "ピーナッツバター":{u:"g",cal:599,p:25,f:50,c:20},
+  "ブルーベリー":{u:"g",cal:48,p:.5,f:.1,c:12.9},
+  "ブロッコリー":{u:"g",cal:37,p:5.4,f:.6,c:6.6},
+  "プロテイン":{u:"g",cal:400,p:75,f:6,c:10},
+  "りんご":{u:"個",cal:140,p:.5,f:.3,c:37},
+  "アボカド":{u:"個",cal:224,p:4,f:21,c:12}
+};
+function estimateFood(){
+  const raw=$("ingredients").value.trim();
+  if(!raw){alert("材料と分量を入力してください");return}
+  const parts=raw.split(/[、,\n＋+]/).map(x=>x.trim()).filter(Boolean);
+  const total={cal:0,p:0,f:0,c:0};const found=[],unknown=[];
+  for(const part of parts){
+    const name=Object.keys(FOODDB).sort((a,b)=>b.length-a.length).find(k=>part.includes(k));
+    const amountMatch=part.match(/(\d+(?:\.\d+)?)/);
+    if(!name||!amountMatch){unknown.push(part);continue}
+    const item=FOODDB[name],amount=Number(amountMatch[1]);
+    const factor=["g","ml"].includes(item.u)?amount/100:amount;
+    total.cal+=item.cal*factor;total.p+=item.p*factor;total.f+=item.f*factor;total.c+=item.c*factor;
+    found.push(name+" "+amount+item.u);
+  }
+  if(!found.length){alert("食品名・分量を確認してください。未対応の食材は栄養値を手入力できます。");return}
+  $("foodCal").value=Math.round(total.cal);$("foodP").value=r(total.p);
+  $("foodF").value=r(total.f);$("foodC").value=r(total.c);
+  alert("計算しました："+found.join("、")+(unknown.length?"。未計算："+unknown.join("、"):""));
+}
+function addFood(){
+  const cal=n("foodCal"),p=n("foodP"),f=n("foodF"),c=n("foodC");
+  const name=$("mealName").value.trim()||$("ingredients").value.trim()||$("mealType").value;
+  if(![$("foodCal").value,$("foodP").value,$("foodF").value,$("foodC").value].some(x=>x!=="")){
+    alert("栄養値を入力するか、材料から計算してください");return;
+  }
+  data.foods.push({id:Date.now(),date:today(),type:$("mealType").value,name,ingredients:$("ingredients").value,cal,p,f,c,photo:photoData});
+  persist();
+  $("mealName").value="";$("ingredients").value="";
+  ["foodCal","foodP","foodF","foodC"].forEach(id=>$(id).value="");
+  $("mealPhoto").value="";$("photoPreview").classList.add("hidden");photoData="";
+  alert("食事を保存しました");
+}
+function addWorkout(){
+  const exercise=$("exercise").value==="その他"?$("exerciseOther").value.trim():$("exercise").value;
+  const weight=n("weightLift"),reps=Math.floor(n("reps")),sets=Math.floor(n("sets"));
+  if(!exercise||reps<1||sets<1){alert("種目・回数・セット数を入力してください");return}
+  data.workouts.push({id:Date.now(),date:$("workDate").value||today(),exercise,weight,reps,sets,note:$("workNote").value.trim()});
+  persist();$("weightLift").value="";$("reps").value="";$("sets").value=3;$("workNote").value="";
+  alert("筋トレを保存しました");
+}
+function addBody(){
+  const date=$("bodyDate").value||today();
+  const obj={id:Date.now(),date,weight:n("bodyWeight"),fat:n("bodyFat"),waist:n("waist"),chest:n("chest"),arm:n("arm"),thigh:n("thigh"),note:$("bodyNote").value.trim()};
+  if(!obj.weight&&!obj.fat&&!obj.waist&&!obj.chest&&!obj.arm&&!obj.thigh){alert("体重または身体サイズを入力してください");return}
+  data.bodies.push(obj);persist();
+  ["bodyWeight","bodyFat","waist","chest","arm","thigh","bodyNote"].forEach(id=>$(id).value="");
+  alert("身体データを保存しました");
+}
+function saveGoals(){
+  data.goals={weight:n("goalWeight"),cal:n("goalCal"),protein:n("goalProtein"),fat:n("goalFat"),carbs:n("goalCarbs")};
+  persist();alert("目標を保存しました");
+}
+function removeItem(type,id){
+  if(!confirm("この記録を削除しますか？"))return;
+  data[type]=data[type].filter(x=>x.id!==id);persist();
+}
+function fmtDate(d){return esc(d||"")}
+function render(){
+  const g=data.goals, foods=dayFoods(), workouts=dayWorkouts(), s=sumFoods(foods);
+  $("homeCal").textContent=Math.round(s.cal);$("homeP").textContent=r(s.p);
+  $("calBar").style.width=Math.min(100,s.cal/Math.max(1,g.cal)*100)+"%";
+  $("pBar").style.width=Math.min(100,s.p/Math.max(1,g.protein)*100)+"%";
+  const lastBody=data.bodies.slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
+  $("homeWeight").textContent=lastBody&&lastBody.weight?r(lastBody.weight):"--";
+  $("homeSummary").textContent="脂質 "+r(s.f)+"g ／ 炭水化物 "+r(s.c)+"g。目標："+g.cal+" kcal・タンパク質 "+g.protein+"g";
+  $("homeFood").innerHTML=foods.length?foods.map(x=>"<div class='entry'><strong>"+esc(x.type)+"： "+esc(x.name)+"</strong><p>"+Math.round(x.cal)+" kcal · P "+r(x.p)+"g</p></div>").join(""):"<p>食事の記録はまだありません。</p>";
+  $("homeWorkout").innerHTML=workouts.length?workouts.map(x=>"<div class='entry'><strong>"+esc(x.exercise)+"</strong><p>"+x.weight+"kg × "+x.reps+"回 × "+x.sets+"セット</p></div>").join(""):"<p>今日の筋トレ記録はまだありません。</p>";
+  const sorted=data.bodies.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  $("weightSummary").innerHTML=sorted.length?sorted.slice(-7).map(x=>"<div class='entry'>"+fmtDate(x.date)+"： <strong>"+(x.weight?r(x.weight)+" kg":"体重未入力")+"</strong></div>").reverse().join(""):"<p>体重を記録すると、ここに表示されます。</p>";
+  $("foodSumCal").textContent=Math.round(s.cal);$("foodSumP").textContent=r(s.p);$("foodSumF").textContent=r(s.f);$("foodSumC").textContent="炭水化物："+r(s.c)+"g ／ 目標："+g.carbs+"g";
+  $("foodHistory").innerHTML=data.foods.slice().sort((a,b)=>b.id-a.id).slice(0,50).map(x=>"<div class='entry'><strong>"+fmtDate(x.date)+" "+esc(x.type)+"： "+esc(x.name)+"</strong><p>"+Math.round(x.cal)+" kcal · P "+r(x.p)+"g · F "+r(x.f)+"g · C "+r(x.c)+"g</p>"+(x.photo?"<img class='preview' src='"+x.photo+"' alt='食事写真'>":"")+"<button class='danger' onclick='removeItem(\"foods\","+x.id+")'>削除</button></div>").join("")||"<p>食事記録はまだありません。</p>";
+  $("workHistory").innerHTML=data.workouts.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).slice(0,100).map(x=>"<div class='entry'><strong>"+fmtDate(x.date)+" · "+esc(x.exercise)+"</strong><p>"+x.weight+"kg × "+x.reps+"回 × "+x.sets+"セット</p>"+(x.note?"<p>"+esc(x.note)+"</p>":"")+"<button class='danger' onclick='removeItem(\"workouts\","+x.id+")'>削除</button></div>").join("")||"<p>筋トレ記録はまだありません。</p>";
+  $("bodyHistory").innerHTML=data.bodies.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).slice(0,100).map(x=>"<div class='entry'><strong>"+fmtDate(x.date)+"</strong><p>"+(x.weight?"体重 "+r(x.weight)+"kg · ":"")+(x.fat?"体脂肪 "+r(x.fat)+"% · ":"")+(x.waist?"ウエスト "+r(x.waist)+"cm · ":"")+(x.chest?"胸囲 "+r(x.chest)+"cm · ":"")+(x.arm?"腕 "+r(x.arm)+"cm · ":"")+(x.thigh?"太もも "+r(x.thigh)+"cm":"")+"</p>"+(x.note?"<p>"+esc(x.note)+"</p>":"")+"<button class='danger' onclick='removeItem(\"bodies\","+x.id+")'>削除</button></div>").join("")||"<p>身体データはまだありません。</p>";
+  $("goalWeight").value=g.weight;$("goalCal").value=g.cal;$("goalProtein").value=g.protein;$("goalFat").value=g.fat;$("goalCarbs").value=g.carbs;
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="bulk-up-backup-"+today()+".json";a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+function restoreData(){
+  const f=$("restoreFile").files[0];if(!f){alert("バックアップファイルを選択してください");return}
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const d=JSON.parse(reader.result);
+      if(!d||!Array.isArray(d.foods)||!Array.isArray(d.workouts)||!Array.isArray(d.bodies))throw Error();
+      if(!confirm("現在の記録を置き換えて復元しますか？"))return;
+      data={...DEFAULT,...d,goals:{...DEFAULT.goals,...(d.goals||{})}};
+      persist();alert("復元しました");
+    }catch(e){alert("正しいバックアップファイルではありません")}
+  };reader.readAsText(f);
+}
+function clearAll(){
+  if(!confirm("全ての食事・筋トレ・身体データを削除しますか？この操作は元に戻せません。"))return;
+  data=structuredClone(DEFAULT);persist();alert("全記録を削除しました");
+}
+render();
+</script>
+</body>
+</html>
